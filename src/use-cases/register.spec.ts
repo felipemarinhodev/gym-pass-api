@@ -14,7 +14,7 @@ describe('Register Use Case', () => {
       password: '123456',
     })
 
-    expect(user).toContain({
+    await expect(user).toContain({
       name: 'Fulano',
       email: 'fulano@email.com',
     })
