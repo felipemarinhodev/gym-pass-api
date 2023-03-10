@@ -5,6 +5,21 @@ import { RegisterUseCase } from './register'
 import { UserAlreadyExistError } from './errors/user-already-exists-error'
 
 describe('Register Use Case', () => {
+  it('should be able to register', async () => {
+    const registerUseCase = new RegisterUseCase(new InMemoryUsersRepository())
+
+    const { user } = await registerUseCase.execute({
+      name: 'Fulano',
+      email: 'fulano@email.com',
+      password: '123456',
+    })
+
+    expect(user).toContain({
+      name: 'Fulano',
+      email: 'fulano@email.com',
+    })
+    expect(user.id).toEqual(expect.any(String))
+  })
   it('should hash user password upon registration', async () => {
     const registerUseCase = new RegisterUseCase(new InMemoryUsersRepository())
 
