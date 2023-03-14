@@ -1,3 +1,4 @@
+import { ResourceNotFoundError } from './errors/resource-not-found-error'
 import { InMemoryUsersRepository } from '@/repositories/in-memory/in-memory-users-repository'
 import { describe, expect, it, vi } from 'vitest'
 import { GetUserProfileUseCase } from './get-user-profile'
@@ -18,5 +19,17 @@ describe('Get User profile Use Case', () => {
     const { user } = await sut.execute({ userId: 'user-id' })
 
     expect(user?.id).toEqual(expect.any(String))
+  })
+  it('should not be able to get user profile with wrong id', async () => {
+    const usersRepository = new InMemoryUsersRepository()
+    const sut = new GetUserProfileUseCase(usersRepository)
+
+    vi.spyOn(usersRepository, 'findById').mockRejectedValueOnce(
+      new ResourceNotFoundError(),
+    )
+
+    expect(
+      async () => await sut.execute({ userId: 'user-id' }),
+    ).rejects.toBeInstanceOf(ResourceNotFoundError)
   })
 })
