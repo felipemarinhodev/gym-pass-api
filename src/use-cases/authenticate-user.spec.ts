@@ -47,4 +47,19 @@ describe('Authenticate Use Case', () => {
       }),
     ).rejects.toBeInstanceOf(InvalidCredentialsError)
   })
+  it('should not be able to authenticate with wrong password', async () => {
+    const { usersRepository, sut, currentUser } = await makeSut()
+    vi.spyOn(usersRepository, 'create').mockResolvedValue(currentUser)
+
+    vi.spyOn(usersRepository, 'findByEmail').mockReturnValueOnce(
+      new Promise((resolve, reject) => reject(new InvalidCredentialsError())),
+    )
+
+    expect(() =>
+      sut.execute({
+        email: 'fulano@example.com',
+        password: 'any_password',
+      }),
+    ).rejects.toBeInstanceOf(InvalidCredentialsError)
+  })
 })
