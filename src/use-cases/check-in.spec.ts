@@ -1,7 +1,8 @@
 import { CheckInsRepository } from '@/repositories/checkin-repository'
 import { Prisma, CheckIn } from '@prisma/client'
+import dayjs from 'dayjs'
 import { randomUUID } from 'node:crypto'
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { CheckInUseCase } from './check-in'
 
 class CheckInsRepositoryStub implements CheckInsRepository {
@@ -19,6 +20,19 @@ class CheckInsRepositoryStub implements CheckInsRepository {
     this.items.push(checkIn)
     return new Promise((resolve) => resolve(checkIn))
   }
+
+  findByUserIdOnDate(userId: string, date: Date): Promise<CheckIn | null> {
+    const startOfTheDay = dayjs(date).startOf('date')
+    const endOfTheDay = dayjs(date).endOf('date')
+    const result = this.items.find((checkIn) => {
+      const checkInDate = dayjs(checkIn.created_at)
+      const isOnSameDate =
+        checkInDate.isAfter(startOfTheDay) && checkInDate.isBefore(endOfTheDay)
+      return checkIn.user_id === userId && isOnSameDate
+    })
+
+    return new Promise((resolve) => resolve(result))
+  }
 }
 
 const makeSut = () => {
@@ -29,9 +43,49 @@ const makeSut = () => {
 }
 
 describe('Check-in Use Case', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it('should be able to check in', async () => {
     const { sut } = makeSut()
 
+    const { checkIn } = await sut.execute({
+      gymId: 'gym-01',
+      userId: 'user-01',
+    })
+
+    expect(checkIn.id).toEqual(expect.any(String))
+  })
+  it('should not be able to check in twice in the same day', async () => {
+    const { sut } = makeSut()
+    vi.setSystemTime(new Date(2022, 0, 20, 8, 0, 0))
+
+    await sut.execute({
+      gymId: 'gym-01',
+      userId: 'user-01',
+    })
+
+    expect(() =>
+      sut.execute({
+        gymId: 'gym-01',
+        userId: 'user-01',
+      }),
+    ).rejects.toBeInstanceOf(Error)
+  })
+  it('should be able to check in twice in the different days', async () => {
+    const { sut } = makeSut()
+    vi.setSystemTime(new Date(2022, 0, 20, 8, 0, 0))
+
+    await sut.execute({
+      gymId: 'gym-01',
+      userId: 'user-01',
+    })
+
+    vi.setSystemTime(new Date(2022, 0, 21, 8, 0, 0))
     const { checkIn } = await sut.execute({
       gymId: 'gym-01',
       userId: 'user-01',
