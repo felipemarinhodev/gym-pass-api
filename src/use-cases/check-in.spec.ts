@@ -46,10 +46,9 @@ const makeSut = () => {
     title: 'Javascript Gym',
     description: '',
     phone: '',
-    latitude: new Decimal(0),
-    longitude: new Decimal(0),
+    latitude: new Decimal(49.2246963),
+    longitude: new Decimal(-123.1063684),
   })
-
   return { sut }
 }
 
@@ -113,5 +112,17 @@ describe('Check-in Use Case', () => {
     })
 
     expect(checkIn.id).toEqual(expect.any(String))
+  })
+  it('should not be able to check in on distant gym', async () => {
+    const { sut } = makeSut()
+
+    await expect(() =>
+      sut.execute({
+        gymId: 'gym-01',
+        userId: 'user-01',
+        userLatitude: 49.2243778,
+        userLongitude: -123.117618,
+      }),
+    ).rejects.toBeInstanceOf(Error)
   })
 })
