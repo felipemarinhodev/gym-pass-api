@@ -1,3 +1,5 @@
+import { MaxDistanceError } from './errors/max-distance-error'
+import { MaxNumberOfCheckInsError } from './errors/max-number-of-check-ins-error'
 import { CheckInsRepository } from '@/repositories/checkin-repository'
 import { InMemoryGymsRepository } from '@/repositories/in-memory/in-memory-gyms-repository'
 import { CheckIn, Prisma } from '@prisma/client'
@@ -90,7 +92,7 @@ describe('Check-in Use Case', () => {
         userLatitude: 49.2246963,
         userLongitude: -123.1063684,
       }),
-    ).rejects.toBeInstanceOf(Error)
+    ).rejects.toBeInstanceOf(MaxNumberOfCheckInsError)
   })
   it('should be able to check in twice in the different days', async () => {
     const { sut } = makeSut()
@@ -123,6 +125,6 @@ describe('Check-in Use Case', () => {
         userLatitude: 49.2243778,
         userLongitude: -123.117618,
       }),
-    ).rejects.toBeInstanceOf(Error)
+    ).rejects.toBeInstanceOf(MaxDistanceError)
   })
 })
