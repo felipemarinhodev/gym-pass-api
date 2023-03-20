@@ -1,43 +1,10 @@
-import { MaxDistanceError } from './errors/max-distance-error'
-import { MaxNumberOfCheckInsError } from './errors/max-number-of-check-ins-error'
-import { CheckInsRepository } from '@/repositories/checkin-repository'
+import { CheckInsRepositoryStub } from '@/repositories/in-memory/check-ins-repository-stub'
 import { InMemoryGymsRepository } from '@/repositories/in-memory/in-memory-gyms-repository'
-import { CheckIn, Prisma } from '@prisma/client'
 import { Decimal } from '@prisma/client/runtime'
-import dayjs from 'dayjs'
-import { randomUUID } from 'node:crypto'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { CheckInUseCase } from './check-in'
-
-class CheckInsRepositoryStub implements CheckInsRepository {
-  public items: CheckIn[] = []
-
-  create(data: Prisma.CheckInUncheckedCreateInput): Promise<CheckIn> {
-    const { user_id, gym_id } = data
-    const checkIn = {
-      id: randomUUID(),
-      created_at: new Date(),
-      validated_at: data.validated_at ? new Date(data.validated_at) : null,
-      user_id,
-      gym_id,
-    }
-    this.items.push(checkIn)
-    return new Promise((resolve) => resolve(checkIn))
-  }
-
-  findByUserIdOnDate(userId: string, date: Date): Promise<CheckIn | null> {
-    const startOfTheDay = dayjs(date).startOf('date')
-    const endOfTheDay = dayjs(date).endOf('date')
-    const result = this.items.find((checkIn) => {
-      const checkInDate = dayjs(checkIn.created_at)
-      const isOnSameDate =
-        checkInDate.isAfter(startOfTheDay) && checkInDate.isBefore(endOfTheDay)
-      return checkIn.user_id === userId && isOnSameDate
-    })
-
-    return new Promise((resolve) => resolve(result || null))
-  }
-}
+import { MaxDistanceError } from './errors/max-distance-error'
+import { MaxNumberOfCheckInsError } from './errors/max-number-of-check-ins-error'
 
 const makeSut = () => {
   const checkInsRepository = new CheckInsRepositoryStub()
