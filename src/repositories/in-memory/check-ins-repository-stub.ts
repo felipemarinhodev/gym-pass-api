@@ -16,7 +16,7 @@ export class CheckInsRepositoryStub implements CheckInsRepository {
       .slice((page - 1) * 20, page * 20)
   }
 
-  create(data: Prisma.CheckInUncheckedCreateInput): Promise<CheckIn> {
+  async create(data: Prisma.CheckInUncheckedCreateInput) {
     const { user_id, gym_id } = data
     const checkIn = {
       id: randomUUID(),
@@ -26,7 +26,7 @@ export class CheckInsRepositoryStub implements CheckInsRepository {
       gym_id,
     }
     this.items.push(checkIn)
-    return new Promise((resolve) => resolve(checkIn))
+    return checkIn
   }
 
   findByUserIdOnDate(userId: string, date: Date): Promise<CheckIn | null> {
@@ -40,5 +40,21 @@ export class CheckInsRepositoryStub implements CheckInsRepository {
     })
 
     return new Promise((resolve) => resolve(result || null))
+  }
+
+  async findById(checkInId: string) {
+    const checkIn = this.items.find((item) => item.id === checkInId)
+    if (!checkIn) {
+      return null
+    }
+    return checkIn
+  }
+
+  async save(checkIn: CheckIn) {
+    const index = this.items.findIndex((item) => item.id === checkIn.id)
+    if (index >= 0) {
+      this.items[index] = checkIn
+    }
+    return checkIn
   }
 }
